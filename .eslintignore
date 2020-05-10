@@ -1,0 +1,6 @@
+assets/dependencies/**/*.js
+views/**/*.ejs
+node_modules/
+*.min.js
+*.wip.js
+
