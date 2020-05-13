@@ -1,6 +1,6 @@
 {
   "name": "dashmachine-auth-request",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Supports Auth Requests for Dash Platform Web Dapps",
   "main": "lib/auth-request.js",
   "scripts": {

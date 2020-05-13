@@ -222,7 +222,7 @@ module.exports = class DataDocument {
 
       const timeErr = Date.now();
       if (timeErr < timeEnd) {
-        timeRemaining = timeEnd - timeErr;
+        let timeRemaining = timeEnd - timeErr;
         debug(`Attempt to retsrt waitFor for remaining ${timeRemaining}ms`);
         await this.waitFor(
           connection,
