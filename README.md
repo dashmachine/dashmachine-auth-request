@@ -197,6 +197,8 @@ AuthRequest class - A request for authorisation
 
 ##### Examples
 
+> Note: the libarary has been updated so that the global connection object is no loger automatically connected & disconnected for each method. You must call the (undocumented) connect() and disconnect() methods before (and after) the other calls. 
+
 ```javascript
 const AuthRequest = require('./lib/auth-request');
 const Options = require('./options');
