@@ -27,6 +27,11 @@ module.exports = class DataDocument {
     this._id = id;
     this._ownerId = ownerId;
     this._data = data;
+
+    //TODO: remove after client retries/error 13 is resolved
+    this._submitTries = 0;
+    this._submitMaxRetries = 3;
+
   }
 
   /**
@@ -34,11 +39,15 @@ module.exports = class DataDocument {
    * @param connection A DashJS client containing the account and keys for signing the doc
    */
   async submit(connection) {
+    debug(
+      `Document submit. Tries so far: ${this._submitTries}`
+    );
     debug(`Assemble document`);
     debug(`contract id: ${this._dataContractId}`);
     debug(`ownerIdentity id: ${JSON.stringify(this._ownerId)}`);
     debug(`data: ${JSON.stringify(this._data)}`);
     try {
+      this._submitTries++;
       const client = connection.client;
       await client.isReady();
       debug(`client ready...`);
@@ -72,14 +81,22 @@ module.exports = class DataDocument {
         identity,
       );
       debug(
-        `document successfully submitted with txid: ${JSON.stringify(
+        `document successfully submitted: ${JSON.stringify(
           submitted,
         )}`,
       );
+      this._submitTries = 0;
+      debug(`Reset connection tries: ${this._submitTries}`);
       return { success: true, data: submitted };
     } catch (e) {
-      debug(`document submit error: ${e}`);
-      return { error: true, message: e };
+      debug(`ERR_DOC_SUBMIT: ${e}`);
+      if (this._submitTries <= this._submitMaxRetries) {
+        debug(`retrying document submit`)
+        await this.submit(connection);
+      }
+      debug(`Unable to submit document after ${this._submitTries} attempts`);
+      //return { error: true, message: e };
+      throw new Error(e.message);
     }
   }
 
@@ -92,8 +109,9 @@ module.exports = class DataDocument {
    */
   static async find(connection, locator, query) {
     debug(
-      `find documents with locator ${locator} matching query ${query}`,
+      `find documents with locator ${locator} matching query ${JSON.stringify(query)}.`,
     );
+
     try {
       const client = connection.client;
       await client.isReady();
@@ -115,12 +133,12 @@ module.exports = class DataDocument {
         return { success: true, data: arrDocs };
       } else {
         debug(`No docs found`);
-        return { success: false };
+        return { success: false, data: [] };
       }
     } catch (e) {
       // TODO: return doffernt error or success:false if docment not found or server error
-      debug(`document find error: ${e}`);
-      return { error: true, message: e };
+      debug(`ERR_DOC_FIND: ${e}`);
+      throw new Error(e.message);
     }
   }
 
@@ -149,12 +167,14 @@ module.exports = class DataDocument {
     try {
       const timeStart = Date.now();
       debug(`Starting at ${timeStart}`);
-      const timeEnd = timeStart + timeout;
+      //timeEnd needs to be accessible in catch{}, so it is function scoped with var
+      var timeEnd = timeStart + timeout;
       debug(`Trying until ${timeEnd} (${timeout}ms)`);
       let lastCall = timeStart;
       let arrDocs = [];
       let calledCount = 0;
       let foundResult;
+      const findMaxRetries = 3;
       while (lastCall < timeEnd) {
         // TODO implement frequency
         calledCount++;
@@ -162,24 +182,59 @@ module.exports = class DataDocument {
         debug(
           `Calling find attempt number ${calledCount} @ ${lastCall}`,
         );
-        foundResult = await this.find(connection, locator, query);
-        if (foundResult.success) {
-          debug(
-            `Got a successful result after ${calledCount} attempts and ${
+        //make n tries per attempt in the caes of errors
+
+        let findTries = 0;
+        debug(
+          `Tries so far: ${findTries}`,
+        );
+
+        try {
+          findTries++;
+          foundResult = await this.find(connection, locator, query);
+          if (foundResult.success) {
+            debug(
+              `Got a successful result after ${calledCount} attempts and ${
               Date.now() - timeStart
-            }ms`,
-          );
-          return { success: true, data: foundResult.data };
+              }ms`,
+            );
+            findTries = 0;
+            return { success: true, data: foundResult.data };
+          }
+        }
+        catch (e) {
+          debug(`find tries so far: ${findTries}`)
+          if (findTries <= findMaxRetries) {
+            debug(`retrying document find`)
+            await this.find(connection, locator, query);
+          }
+          debug(`find document after ${findTries} attempts`);
+
         }
       }
       //loop completed and did't find the document
       debug(
         `document waitFor() didn't find any documents in specified time`,
       );
-      return { error: true, message: 'documents not found' };
+      return { success: false, data: [] };
     } catch (e) {
-      debug(`document waitFor() error: ${e}`);
-      return { error: true, message: e };
+      debug(`ERR_DOC_WAITFOR: ${e}`);
+
+      const timeErr = Date.now();
+      if (timeErr < timeEnd) {
+        timeRemaining = timeEnd - timeErr;
+        debug(`Attempt to retsrt waitFor for remaining ${timeRemaining}ms`);
+        await this.waitFor(
+          connection,
+          locator,
+          query,
+          timeRemaining,
+          frequency,
+        )
+
+      }
+      //timeout period has expired when error thown
+      throw new Error(e.message);
     }
   }
 

@@ -32,8 +32,6 @@ module.exports = class DashUser {
     try {
       const client = connection.client;
       debug(`client: ${client}`);
-      await client.isReady();
-      //.then(async () => { // attempting to catch netwrok errors
       debug(`Client is ready...`);
 
       debug(`Find user DPNS Docuemnt Id`);
@@ -50,10 +48,14 @@ module.exports = class DashUser {
       );
 
       debug(`Found document(s): ${JSON.stringify(foundUsers)}`);
-
-      if ((foundUsers.length = 0)) {
+      /*
+      if (foundUsers.error) {
+        return { error: true, message: foundUsers.message };
+      } 
+      */  
+      if (!foundUsers.success) {
         return { success: false, message: 'Name not found' };
-      } else if ((foundUsers.length = 1)) {
+      } else if ((foundUsers.data.length = 1)) {
         let doc = new DPNSDocument();
         Object.assign(doc, foundUsers.data[0]);
         debug(`DPNSDocument: ${JSON.stringify(doc)}`);
@@ -61,15 +63,18 @@ module.exports = class DashUser {
         const docData = doc.data.data;
         debug(`Document DATA : ${JSON.stringify(docData)}`);
         debug(
-          `User IdnetityId (from DPNS docuemnt): ${docData.records.dashIdentity}`,
+          `User IdentityId (from DPNS docuemnt): ${docData.records.dashIdentity}`,
         );
         let foundUser = new this();
         foundUser.name = nameToFind;
         foundUser.id = doc.id;
         foundUser.identityId = docData.records.dashIdentity;
+        debug(`Fetching Identity record for id ${foundUser.identityId}`);
         foundUser.identity = await client.platform.identities.get(
           foundUser.identityId,
         );
+        debug(`Found identity ${JSON.stringify(foundUser.identity)}`);
+
         foundUser.publicKey = foundUser.identity.publicKeys[0].data;
         debug(
           `returning user instance: ${JSON.stringify(foundUser)}`,
@@ -77,14 +82,18 @@ module.exports = class DashUser {
         return { success: true, data: foundUser };
       } else {
         //should never happen!
+        /*
         return {
           error: true,
           message: 'More than one name record found',
         };
+        */
+        throw new Error('More than one name record found')
       }
     } catch (e) {
       debug(`find name error: ${e}`);
-      return { error: true, message: e };
+      //return { error: true, message: e };
+      throw new Error(e.message)
     }
   }
 
@@ -167,19 +176,20 @@ module.exports = class DashUser {
   }
 
   /**
-   * Returns the DashUser instance in JSON format
+   * Returns the DashUser instance as JSON string format ////
    * @method DashUser#toJSON
    * @return {JSON}
    */
 
   toJSON() {
-    return {
+    let obj = {
       name: this._name,
       id: this._id,
       identityId: this._identityId,
       identity: this._identity,
-      publicKey: this._publicKey,
-      privateKey: this._privateKey,
+      publicKey: this._publicKey
     };
+    if(typeof this._privateKey != typeof undefined) obj.privateKey = this._privateKey;
+    return JSON.stringify(obj);
   }
 };

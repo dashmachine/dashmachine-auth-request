@@ -30,6 +30,11 @@ module.exports = class DashConnection {
 
     this._seeds = seeds;
     this._optionBuilder.seeds = [this._seeds];
+
+
+    this._connectTries = 0;
+    this._connectMaxRetries = 3;
+
     debug(`Contructor parameters: ${this}`);
   }
   /**
@@ -37,19 +42,32 @@ module.exports = class DashConnection {
    * @method connect
    *
    */
-  connect() {
+  async connect() {
     debug(
       `Intialising connection to network ${
-        this._network
-      } with options ${JSON.stringify(this._optionBuilder)}`,
+      this._network
+      } with options ${JSON.stringify(this._optionBuilder)}.Tries so far: ${this._connectTries}`
     );
     try {
+      this._connectTries++;
       this._client = new Dash.Client(this._optionBuilder);
+      await this._client.isReady()
       //debug(`Successfully connected ${JSON.stringify(this._client)}` );
-      debug(`Successfully connected ${this._client}`);
+      debug(`Successfully connected after ${this._connectTries} attempts ${this._client}`);
+      //reset connection attemps
+      this._connectTries = 0;
+      debug(`Reset connection tries: ${this._connectTries}`);
+      return; 
     } catch (e) {
-      debug(`connection error: ${e}`);
-      return { error: e };
+      debug(`ERR_CONNECTION: ${e}`);
+
+      if (this._connectTries < this._connectMaxRetries) {
+        debug(`retrying connection`)
+        this.connect();
+      }
+      debug(`Unable to connect after ${this._connectTries} attempts`);
+      throw e;
+
     }
   }
 
@@ -110,16 +128,7 @@ module.exports = class DashConnection {
 
   get seeds() {
     return this._seeds;
-  }
-
-  /**
-   * @param {Object} newSeeds
-   */
-  set options(newSeeds) {
-    if (newSeeds) {
-      this._seeds = newSeeds;
-    }
-  }
+  } const
 
   get client() {
     return this._client;
@@ -142,3 +151,4 @@ module.exports = class DashConnection {
     return this._optionBuilder;
   }
 };
+
