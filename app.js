@@ -9,12 +9,12 @@ const authRequest = new AuthRequest(
   'salvemio',
   '1234',
   'alice',
-  'uniform analyst paper father soldier toe lesson fetch exhaust jazz swim response',
+  'erosion chalk panda one embrace absurd punch fitness congress cave true fine',
   'Web dApp Sample',
   Options.options,
   'Tweets are greets',
 );
-
+/*
 authRequest.vendor = {
   name: 'alice',
   id: 'Aobc5KKaA4ZqzP7unc6WawQXQEK2S3y6EwrmvJLLn1ui',
@@ -36,7 +36,7 @@ authRequest.vendor = {
     '40148175614f062fb0b4e5c519be7b6f57b872ebb55ea719376322fd12547bff',
 };
 
-
+*/
 
 async function test1() {
   try {
@@ -122,8 +122,31 @@ async function test2() {
   }
 }
 
+
+async function test3() {
+  try {
+    await authRequest.connect();
+    let vendor = authRequest.vendor;
+    console.log('intial value:', vendor);
+    vendor = authRequest.vendorToJSON;
+    console.log('intial value toJSON (error):', vendor);
+
+    vendor = await authRequest.findVendor();
+    console.log('found value:', vendor);
+    vendor = await authRequest.findVendor();
+    console.log('shouldnt go to network this time:', vendor);
+
+
+  } catch (e) {
+    console.log(`errors: ${e.message}`); ////
+  }
+  finally{
+    await authRequest.disconnect();
+  }
+}
+
 (async ()=>{
-await test2()
+await test3()
 })();
 
 

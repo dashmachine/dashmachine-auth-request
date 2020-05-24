@@ -29,7 +29,7 @@ module.exports = class DashConnection {
     this._optionBuilder.apps = this._apps;
 
     this._seeds = seeds;
-    this._optionBuilder.seeds = [this._seeds];
+    this._optionBuilder.seeds = this._seeds;
 
 
     this._connectTries = 0;

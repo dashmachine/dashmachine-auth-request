@@ -2,14 +2,20 @@ exports.options = {
   connection: {
     apps: {
       loginContract: {
-        contractId: '9GHRxvyYDmWz7pBKRjPnxjsJbbgKLngtejWWp3kEY1vB',
+        contractId: '3K27igwzJDffCoKZVRGi5KRLb95rhd5psLDUXejDZcTq',
       },
       dpnsContract: {
-        contractId: '295xRRRMGYyAruG39XdAibaU9jMAzxhknkkAxFE7uVkW',
+        contractId: '7PBvxeGpj7SsWfvDSa31uqEMt58LAiJww7zNcVRP1uEM',
       },
     },
     network: 'testnet',
-    seeds: { service: '34.215.175.142:3000' },
+    seeds: [
+      { service: 'seed-1.evonet.networks.dash.org:3000' },
+      { service: 'seed-2.evonet.networks.dash.org:3000' },
+      { service: 'seed-3.evonet.networks.dash.org:3000' },
+      { service: 'seed-4.evonet.networks.dash.org:3000' },
+      { service: 'seed-5.evonet.networks.dash.org:3000' },
+     ],
   },
   polling: {
     responsePollingTimeout: 30000,
