@@ -5,11 +5,11 @@ const Options = require('./options');
 
 
 const authRequest = new AuthRequest(
-  1,
-  'salvemio',
+  3,
+  'SexyGnomer',
   '1234',
-  'alice',
-  'erosion chalk panda one embrace absurd punch fitness congress cave true fine',
+  'SexyGnomer',// 'alice',
+  'buyer useless key december select kingdom canoe day beyond cat abandon attract',//'erosion chalk panda one embrace absurd punch fitness congress cave true fine',
   'Web dApp Sample',
   Options.options,
   'Tweets are greets',
@@ -146,7 +146,7 @@ async function test3() {
 }
 
 (async ()=>{
-await test3()
+await test2()
 })();
 
 
