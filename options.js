@@ -2,7 +2,8 @@ exports.options = {
   connection: {
     apps: {
       loginContract: {
-        contractId: '3K27igwzJDffCoKZVRGi5KRLb95rhd5psLDUXejDZcTq',
+        //contractId: '3K27igwzJDffCoKZVRGi5KRLb95rhd5psLDUXejDZcTq',
+        contractId: 'DBVuaTbU8PY9weNrg8RZPerNnv4oEdRWwSa4qXUG7ji4',
       },
       dpnsContract: {
         contractId: '7PBvxeGpj7SsWfvDSa31uqEMt58LAiJww7zNcVRP1uEM',
